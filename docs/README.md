@@ -1,6 +1,6 @@
 # HelloFHE documentation
 
-HelloFHE uses a synchronous encrypted square/add to exercise first-party Clef cryptography and Tier 1-4 proof instrumentation in the PSG and MLIR/SMT lowering. The source is a draft. Native execution and proof acceptance are pending.
+HelloFHE uses a synchronous encrypted square/add to exercise first-party Clef cryptography and Tier 1-4 proof instrumentation in the PSG and MLIR/SMT lowering.
 
 ## Reading order
 

@@ -23,7 +23,7 @@ Extend `src/Protocol.clef` when connecting transport; it currently records only 
 | Active lane count and payload extent | Fit the packing plan and byte limits; bound expanded decode size too |
 | Outcome and optional public error class | Exactly one local terminal selection; no plaintext or secret-bearing diagnostics |
 
-Use authenticated transport or authenticated framing to bind these fields and the ciphertext to the intended peer. FHE is malleable; ciphertext and correlation alone do not authenticate a sender or prove an evaluated result. An artifact identity selects the agreed computation but is not a per-answer execution proof.
+Use authenticated transport or authenticated framing to bind these fields and the ciphertext to the intended peer. Authenticate the sender and bind each message to the selected computation and invocation. The artifact identity selects that computation.
 
 Before deserialization, reserve the admitted worst-case expanded job bytes, scratch and result capacity as well as a job slot. Cap context/key installation separately. When credits are exhausted, return a bounded busy outcome or apply transport backpressure before accepting more payload. Do not use an unbounded mailbox or a diagnostic pending-count value as the admission mechanism.
 
@@ -49,4 +49,4 @@ Immediate disposal follows the justified last use, including native callbacks an
 
 Use MBS as ciphertext storage, keyed by context/key-set, circuit/profile identity, codec version and ciphertext digest. Recovery validates those identities before loading an object for evaluation. Keep secret keys and plaintext staging out of the worker store. Bound the in-memory working set and account for fetch/decode cost when scheduling.
 
-A durable job/result record can extend retry handling only with an explicit atomic commit and replay policy; blob persistence alone does not supply exactly-once execution. Separate dropping a cache reference, retiring a blob and erasing a client secret. Worker restart must preserve the client custody boundary and reject objects from an incompatible context.
+Define an atomic commit and replay policy for durable job/result records and retry handling. Separate dropping a cache reference, retiring a blob and erasing a client secret. Worker restart must preserve the client custody boundary and reject objects from an incompatible context.

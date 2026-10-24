@@ -4,7 +4,7 @@
 
 ## Implementation sequence
 
-`Arithmetic.clef`, `Protocol.clef` and `Experiment.clef` contain the reference, call interfaces and synchronous control flow. Other module names in the table are proposed. Keep the application expression in `Arithmetic.clef` and extend the existing framework passes. Complete the synchronous run before packing, optimization and actor hosting.
+`Arithmetic.clef`, `Protocol.clef` and `Experiment.clef` contain the reference, call interfaces and synchronous control flow. Keep the application expression in `Arithmetic.clef` and extend the existing framework passes. Complete the synchronous run before packing, optimization and actor hosting.
 
 | Increment | Owning work | Deliverable and acceptance gate |
 | --- | --- | --- |
@@ -13,15 +13,15 @@
 | 3. Run the synchronous greeting | Extend the same Clef library with sampling, key generation, encoding, encryption and decryption; construct the calls consumed by `Experiment.clef` | Connect the admitted BFV operations, run `0`, `6`, `100`, and inspect Tier 1-4 evidence and stage-failure/cleanup controls; no actor required |
 | 4. Admit packed SIMD execution | Extend the same Cryptography provider for packed calls; existing CCS/Baker, Alex and CPU backend owners carry the derived plan | Pack/encrypt/evaluate/decrypt `[0,6,100]`; compare partial/full batches and accepted scalar/vector realizations; report packing and coefficient SIMD separately |
 | 5. Realize cache-aware kernels | Extend the same kernel/scheduling owners | Implement and prove the optimized Clef modular kernel, then NTT/relinearization recipes; compare scalar and optimized outputs, tail shapes, lazy-reduction limits and seam evidence; measure legal tiles under a fixed crypto profile |
-| 6. Establish the process boundary | Extend `Protocol.clef`; proposed `Worker.clef` and client transport use BAREWire | Distinct client/worker processes; authenticated bounded framing; worker has no secret/decrypt binding; captured payload remains ciphertext; all costs measured end to end |
-| 7. Host the evaluator actor | Proposed `Service.clef` binds existing Olivier/Prospero/Ariel contracts | Bounded workers/bytes, completion ownership and cache-domain policy; queue overflow, cancellation, duplicate/late reply, crash/restart and drain controls pass |
+| 6. Establish the process boundary | Extend `Protocol.clef`; `Worker.clef` and client transport use BAREWire | Distinct client/worker processes; authenticated bounded framing; worker has no secret/decrypt binding; captured payload remains ciphertext; all costs measured end to end |
+| 7. Host the evaluator actor | `Service.clef` binds existing Olivier/Prospero/Ariel contracts | Bounded workers/bytes, completion ownership and cache-domain policy; queue overflow, cancellation, duplicate/late reply, crash/restart and drain controls pass |
 | 8. Extend the same service | Existing MBS and GPU owners, with HelloFHE acceptance fixtures | Ciphertext recovery retains context/circuit binding; GPU host dispatch/completion matches the CPU reference and repays transfer/launch costs for a measured batch regime |
 
 Do not replace a missing native operation with identity encryption, a plaintext cast, a handwritten second arithmetic implementation or an invented actor runtime. Record each missing Clef implementation against its contract and unmet acceptance condition.
 
 ## Acceptance and measurement
 
-Run these checks as each increment is implemented. They have not been executed for this draft.
+Run these checks as each increment is implemented.
 
 | Boundary | Positive shapes | Discriminating control |
 | --- | --- | --- |

@@ -30,7 +30,7 @@ Let `N` be ring degree, `L` the active limb count, `c` the component count and `
 
 For illustration only, `N=8192`, `L=3`, `w=8` gives 384 KiB for a two-component ciphertext and 576 KiB for three components. A later relinearized realization preserving an input alongside a three-component product and a two-component result totals 1344 KiB before evaluation keys and scratch. The initial unrelinearized realization instead reserves its actual three-component answer. These figures describe storage only. Modulus-chain selection and cache residency require separate evidence.
 
-For each candidate schedule, calculate peak live buffers plus the active key/table portion and transport staging. Use full allocation extents and touched cache lines, following the CPU design; useful coefficient bytes alone undercount traffic. Compare that model with target cache capacities, associativity assumptions and competing traffic. A capacity fit is an estimate, not a cache reservation.
+For each candidate schedule, calculate peak live buffers plus the active key/table portion and transport staging. Use full allocation extents and touched cache lines, following the CPU design; useful coefficient bytes alone undercount traffic. Compare that model with target cache capacities, associativity assumptions and competing traffic. Measure cache behavior under the expected competing traffic.
 
 ## Recommended kernel patterns
 
@@ -53,9 +53,9 @@ Obtain vector features and OS support from the selected platform/CPU contract. G
 
 Start with one worker and a fixed backend thread budget. Increase workers only within a measured byte budget. Choose either multiple mostly single-threaded evaluators or a smaller number of internally parallel evaluators; bound their product against the CPU allocation to avoid nested oversubscription.
 
-Prospero's placement policy should prefer a stable cache/NUMA domain for a session's public material when that reduces total cost. Account for queue delay and load balance before pinning. First-touch or supported placement binds arenas to that policy; ownership alone does not locate physical pages. Align and round mutable worker metadata, queue endpoints and counters using the actual sharing granularity. Never change the declared transport layout silently.
+Prospero's placement policy should prefer a stable cache/NUMA domain for a session's public material when that reduces total cost. Account for queue delay and load balance before pinning. Use first-touch or supported placement to locate the arena's physical pages under that policy. Align and round mutable worker metadata, queue endpoints and counters using the actual sharing granularity. Never change the declared transport layout silently.
 
-For GPU execution, retain coefficient-contiguous access across neighboring lanes, stage only butterflies whose reuse repays LDS/shared-memory and barrier cost, and make cross-workgroup dependencies separate launches or another admitted synchronization mechanism. Batch enough independent ciphertext work to amortize launch and transfers. Keep host and device buffers live until the recorded completion event, then publish the reply. The existing GPU design owns these obligations; a code object alone is not this gate. Use CPU execution for the initial latency baseline, then compare device end-to-end cost for larger batches.
+For GPU execution, retain coefficient-contiguous access across neighboring lanes, stage only butterflies whose reuse repays LDS/shared-memory and barrier cost, and make cross-workgroup dependencies separate launches or another admitted synchronization mechanism. Batch enough independent ciphertext work to amortize launch and transfers. Keep host and device buffers live until the recorded completion event, then publish the reply. Check these obligations through the GPU host-dispatch and completion contracts. Use CPU execution for the initial latency baseline, then compare device end-to-end cost for larger batches.
 
 ## Side-channel and optimization contract
 

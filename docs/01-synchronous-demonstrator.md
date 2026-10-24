@@ -27,7 +27,7 @@ The evaluator function receives evaluator state and ciphertext through an interf
 
 ## Clef source
 
-[Experiment.clef](../src/Experiment.clef) contains the synchronous orchestration draft. [Protocol.clef](../src/Protocol.clef) defines the local `ClientCalls` and `EvaluatorCalls` records for first-party Clef operations in Fidelity.Cryptography. Their state and value types are abstract. The records describe the interface; the cryptographic operations are not implemented yet.
+[Experiment.clef](../src/Experiment.clef) contains the synchronous orchestration. [Protocol.clef](../src/Protocol.clef) defines the local `ClientCalls` and `EvaluatorCalls` records for first-party Clef operations in Fidelity.Cryptography. Their state and value types are abstract.
 
 [Arithmetic.clef](../src/Arithmetic.clef) defines one operation sequence, `polynomial`: square the input, add the original, release the square temporary, return the answer. The clear reference supplies ordinary integer square/add and a no-op value release. The encrypted evaluator supplies completed ciphertext square/add and the real ciphertext release. Both use the same application expression. The library implements the cryptographic operations explicitly.
 
@@ -55,7 +55,7 @@ let evaluate calls state input =
 | `7` | Decryption failed | Answer, input, evaluator and client released |
 | `8` | Decryption completed but result mismatched | Same completed cleanup as success |
 
-The current `Program.clef` continues to call the clear reference. Connecting the real experiment means constructing the two call records from the admitted provider and calling `Experiment.run clientCalls evaluatorCalls 6`. Use that invocation when changing the entry point. A missing provider must produce an unavailable result; do not install a successful cleartext substitute. Both callback-record invocation and the new polymorphic orchestration need native validation. The first implementation uses functions, callbacks, records, arrays, loops and matches, with cryptography written in Clef.
+The current `Program.clef` continues to call the clear reference. Connecting the real experiment means constructing the two call records from the admitted provider and calling `Experiment.run clientCalls evaluatorCalls 6`. Use that invocation when changing the entry point. A missing provider must produce an unavailable result; do not install a successful cleartext substitute. The first implementation uses functions, callbacks, records, arrays, loops and matches, with cryptography written in Clef.
 
 ## Provider operations to implement
 
@@ -74,7 +74,7 @@ Implement these operations in Fidelity.Cryptography. The application records spe
 
 A successful `Result` must contain a completed value whose prerequisites can be retired safely. Failed operations clean up partial allocations. Release functions are total and do not throw. Use explicit Clef result paths, with partial region ownership accounted for on failure. Calls complete synchronously before returning.
 
-Because Clef bindings are shared deferred computations, the code matches provider outcomes before releasing their prerequisites, and branches on `actual = expected` before releasing the answer or client. It returns a literal status after cleanup, never a deferred decoded value or a borrowed coefficient view. These sequencing and lifetime claims must be checked against the accepted native artifact; source order alone is not an erasure proof.
+Because Clef bindings are shared deferred computations, the code matches provider outcomes before releasing their prerequisites, and branches on `actual = expected` before releasing the answer or client. It returns a literal status after cleanup, never a deferred decoded value or a borrowed coefficient view. Check decode, comparison and retirement ordering in the lowered native operations.
 
 At the add boundary the live ciphertext set is bounded: original input, square temporary and fresh answer, plus provider scratch. The square retires immediately after add completion; the answer and input retire after the client comparison. Erasure of keys, plaintext, spills and temporary copies requires additional provider and lowering evidence.
 
@@ -90,6 +90,6 @@ At the add boundary the live ciphertext set is bounded: original input, square t
 | Lowered sequencing | Native evidence shows comparison/decode completed before their prerequisites are released; no secret view escapes |
 | Clef proof path | Inspect the PSG participants, generated obligations, MLIR/SMT correspondence and checked lowering evidence for the actual Clef kernels |
 
-The expected output for input `6` is `HelloFHE: encrypted evaluation returned 42`. Print it only after status `0`. This output has not been observed in an encrypted run. Ciphertext observations alone do not establish confidentiality.
+The expected output for input `6` is `HelloFHE: encrypted evaluation returned 42`. Print it only after status `0`.
 
 The implementation work is detailed in [02: First-party Clef cryptography](02-first-party-cryptography.md). Its proof-instrumentation acceptance is defined in [03: Tier 1-4 proof instrumentation](03-proof-instrumentation.md).
