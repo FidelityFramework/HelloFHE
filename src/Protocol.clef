@@ -1,0 +1,35 @@
+module HelloFHE.Protocol
+
+// Application call surfaces for a synchronous experiment, not declarations of
+// existing Fidelity.Cryptography APIs. First-party Clef implementations follow
+// docs/01-synchronous-demonstrator.md and docs/02-first-party-cryptography.md.
+// Owned Clef state/value types remain abstract; no foreign crypto is involved.
+type ClientCalls<'Client, 'Evaluator, 'Ciphertext, 'Failure> =
+    { Create: unit -> Result<'Client, 'Failure>
+      CreateEvaluator: 'Client -> Result<'Evaluator, 'Failure>
+      Encrypt: 'Client -> int -> Result<'Ciphertext, 'Failure>
+      Decrypt: 'Client -> 'Ciphertext -> Result<int, 'Failure>
+      ReleaseClient: 'Client -> unit }
+
+// This surface receives no client handle and offers no decrypt operation.
+// Its actual closure captures and provider implementation still need review.
+type EvaluatorCalls<'Evaluator, 'Ciphertext, 'Failure> =
+    { Square: 'Evaluator -> 'Ciphertext -> Result<'Ciphertext, 'Failure>
+      Add: 'Evaluator -> 'Ciphertext -> 'Ciphertext -> Result<'Ciphertext, 'Failure>
+      ReleaseCiphertext: 'Ciphertext -> unit
+      ReleaseEvaluator: 'Evaluator -> unit }
+
+// Proposed boundary shapes. The backend must supply a real ciphertext carrier
+// and codec before these become an encrypted communication interface.
+// A generic parameter or record name does not establish encryption.
+type EvaluationRequest<'Ciphertext> =
+    { Invocation: int
+      Input: 'Ciphertext }
+
+type EvaluationReply<'Ciphertext> =
+    { Invocation: int
+      Output: 'Ciphertext }
+
+// One selected circuit is assumed for this first protocol.
+// Invocation correlation alone establishes neither authentication nor at-most-once
+// acceptance. The eventual transport/actor binding must supply those contracts.

@@ -1,0 +1,17 @@
+module HelloFHE.Program
+
+[<EntryPoint>]
+let main argv =
+    // A clear-reference smoke example, not an encryption demonstration.
+    // Interactive input follows when the checked-input boundary is available.
+    match HelloFHE.Arithmetic.calculate 6 with
+    | Some answer ->
+        if answer = 42 then
+            Console.writeln "HelloFHE reference: 6 * 6 + 6 = 42"
+            0
+        else
+            Console.writeln "HelloFHE reference: unexpected result"
+            1
+    | None ->
+        Console.writeln "HelloFHE reference: input outside 0..100"
+        2

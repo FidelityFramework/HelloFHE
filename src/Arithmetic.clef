@@ -1,0 +1,34 @@
+module HelloFHE.Arithmetic
+
+// One application circuit, parameterized by completed provider operations.
+// square/add return independent owned values. On failure they retain no new
+// resource; release cannot throw or leave deferred work borrowing the retired region.
+let polynomial
+    (square: 'Value -> Result<'Value, 'Failure>)
+    (add: 'Value -> 'Value -> Result<'Value, 'Failure>)
+    (release: 'Value -> unit)
+    (value: 'Value) : Result<'Value, 'Failure> =
+    match square value with
+    | Error failure -> Error failure
+    | Ok squared ->
+        match add squared value with
+        | Error failure ->
+            release squared
+            Error failure
+        | Ok answer ->
+            release squared
+            Ok answer
+
+let private squareClear (x: int) : Result<int, unit> = Ok (x * x)
+let private addClear (left: int) (right: int) : Result<int, unit> = Ok (left + right)
+let private releaseClear (_: int) : unit = ()
+
+// The guard admits x in [0, 100], so x*x+x is in [0, 10100].
+// Clear operations use the same polynomial; no encryption is simulated.
+let calculate (x: int) : int option =
+    if x < 0 || x > 100 then
+        None
+    else
+        match polynomial squareClear addClear releaseClear x with
+        | Ok answer -> Some answer
+        | Error _ -> None

@@ -1,0 +1,20 @@
+[package]
+name = "HelloFHE"
+version = "0.1.0"
+description = "A Clef scaffold for an encrypted arithmetic greeting"
+
+[compilation]
+target = "cpu"
+
+[dependencies]
+platform = { path = "../Fidelity.Platform/Profiles/Linux_x86_64_Default/Fidelity.Platform.fidproj" }
+
+[build]
+sources = [
+  "src/Arithmetic.clef",
+  "src/Protocol.clef",
+  "src/Experiment.clef",
+  "src/Program.clef",
+]
+output = "hellofhe-reference"
+output_kind = "console"

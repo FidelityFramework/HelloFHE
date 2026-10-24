@@ -1,0 +1,60 @@
+module HelloFHE.Experiment
+
+open HelloFHE.Protocol
+
+// The caller retains input; polynomial retires its square temporary and returns
+// a separately owned answer. The evaluator sees no clear input or client state.
+let evaluate
+    (calls: EvaluatorCalls<'Evaluator, 'Ciphertext, 'Failure>)
+    (state: 'Evaluator)
+    (input: 'Ciphertext) : Result<'Ciphertext, 'Failure> =
+    HelloFHE.Arithmetic.polynomial
+        (fun value -> calls.Square state value)
+        (fun left right -> calls.Add state left right)
+        calls.ReleaseCiphertext
+        input
+
+// Source draft: first-party Clef crypto operations must be supplied before this is an FHE run.
+// All provider results represent completed synchronous operations. Failed calls
+// retire partial working regions; releases are total and do not throw.
+let run
+    (client: ClientCalls<'Client, 'Evaluator, 'Ciphertext, 'Failure>)
+    (worker: EvaluatorCalls<'Evaluator, 'Ciphertext, 'Failure>)
+    (input: int) : int =
+    match HelloFHE.Arithmetic.calculate input with
+    | None -> 2
+    | Some expected ->
+        match client.Create () with
+        | Error _ -> 3
+        | Ok clientState ->
+            match client.CreateEvaluator clientState with
+            | Error _ ->
+                client.ReleaseClient clientState
+                4
+            | Ok evaluatorState ->
+                let finish code =
+                    worker.ReleaseEvaluator evaluatorState
+                    client.ReleaseClient clientState
+                    code
+                match client.Encrypt clientState input with
+                | Error _ -> finish 5
+                | Ok encryptedInput ->
+                    let finishInput code =
+                        worker.ReleaseCiphertext encryptedInput
+                        finish code
+                    match evaluate worker evaluatorState encryptedInput with
+                    | Error _ -> finishInput 6
+                    | Ok encryptedAnswer ->
+                        match client.Decrypt clientState encryptedAnswer with
+                        | Error _ ->
+                            worker.ReleaseCiphertext encryptedAnswer
+                            finishInput 7
+                        | Ok actual ->
+                            // Force the clear comparison before releasing the
+                            // Clef working state; no deferred result escapes cleanup.
+                            if actual = expected then
+                                worker.ReleaseCiphertext encryptedAnswer
+                                finishInput 0
+                            else
+                                worker.ReleaseCiphertext encryptedAnswer
+                                finishInput 8
