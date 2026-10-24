@@ -2,9 +2,7 @@
 
 [Documentation index](README.md)
 
-The first application flow, its local call surfaces and resource retirement.
-
-The first encrypted greeting needs a cryptographic provider and ordinary function calls. Use one executable, one client state, one evaluator state and one input per run. Start with `6`, then repeat with `0` and `100`. The initial encoder places the scalar in the constant coefficient of a plaintext polynomial. SIMD packing is a later encoding with its own relation and tests. No actor host, mailbox, task builder, background scheduler, persistence, network codec or new compiler optimization is on this path.
+The first encrypted run uses the Clef cryptographic implementation through synchronous function calls. Use one executable, one client state, one evaluator state and one input per run. Start with `6`, then repeat with `0` and `100`. The initial encoder places the scalar in the constant coefficient of a plaintext polynomial. SIMD packing is a later encoding with its own relation and tests. Actor hosting, scheduling, persistence, transport and compiler optimization follow this first run.
 
 ```mermaid
 sequenceDiagram
@@ -25,13 +23,13 @@ sequenceDiagram
     Main->>Main: Release result, input, evaluator, client
 ```
 
-This demonstrates encrypted arithmetic. The evaluator function receives only evaluator state and ciphertext, and its call surface contains no decrypt operation. The executable as a whole still holds the client's secret key. An untrusted evaluator process is a later isolation boundary; no same-process module boundary should be reported as that protection.
+The evaluator function receives evaluator state and ciphertext through an interface without decryption. The executable still holds the client's secret key. Isolating an untrusted evaluator requires a separate process.
 
-## Concrete Clef source
+## Clef source
 
-The new [Experiment.clef](../src/Experiment.clef) contains the synchronous orchestration draft. [Protocol.clef](../src/Protocol.clef) owns its local `ClientCalls` and `EvaluatorCalls` records. These are local application call records over first-party Clef operations in Fidelity.Cryptography, not declarations of existing library exports or evidence of encryption. Their owned Clef value/state types remain abstract. No record implementing those operations is supplied by the scaffold.
+[Experiment.clef](../src/Experiment.clef) contains the synchronous orchestration draft. [Protocol.clef](../src/Protocol.clef) defines the local `ClientCalls` and `EvaluatorCalls` records for first-party Clef operations in Fidelity.Cryptography. Their state and value types are abstract. The records describe the interface; the cryptographic operations are not implemented yet.
 
-[Arithmetic.clef](../src/Arithmetic.clef) now owns one operation sequence, `polynomial`: square the input, add the original, release the square temporary, return the answer. The clear reference supplies ordinary integer square/add and a no-op value release. The encrypted evaluator supplies completed ciphertext square/add and the real ciphertext release. This shares the application expression without asking the current compiler to infer or synthesize an FHE backend. It introduces no arithmetic operation language or extra semantic pass.
+[Arithmetic.clef](../src/Arithmetic.clef) defines one operation sequence, `polynomial`: square the input, add the original, release the square temporary, return the answer. The clear reference supplies ordinary integer square/add and a no-op value release. The encrypted evaluator supplies completed ciphertext square/add and the real ciphertext release. Both use the same application expression. The library implements the cryptographic operations explicitly.
 
 The encrypted evaluator's source is:
 
@@ -57,11 +55,11 @@ let evaluate calls state input =
 | `7` | Decryption failed | Answer, input, evaluator and client released |
 | `8` | Decryption completed but result mismatched | Same completed cleanup as success |
 
-The current `Program.clef` continues to call the clear reference. Connecting the real experiment means constructing the two call records from the admitted provider and calling `Experiment.run clientCalls evaluatorCalls 6`. That invocation is the concrete next entry-point change. A missing provider must produce an unavailable result; do not install a successful cleartext substitute. Both callback-record invocation and the new polymorphic orchestration need native validation. Ordinary functions, callbacks, records, arrays, loops and matches are sufficient source forms for the first implementation; no foreign cryptographic operation is part of this path.
+The current `Program.clef` continues to call the clear reference. Connecting the real experiment means constructing the two call records from the admitted provider and calling `Experiment.run clientCalls evaluatorCalls 6`. Use that invocation when changing the entry point. A missing provider must produce an unavailable result; do not install a successful cleartext substitute. Both callback-record invocation and the new polymorphic orchestration need native validation. The first implementation uses functions, callbacks, records, arrays, loops and matches, with cryptography written in Clef.
 
 ## Provider operations to implement
 
-Implement the cryptographic operations in Clef under Fidelity.Cryptography's existing core and implementation owners. The local application records specify only the calls needed by this experiment. They do not choose a wire representation, declare target support or admit a provider.
+Implement these operations in Fidelity.Cryptography. The application records specify the calls needed by the experiment. Wire format, target support and provider admission require their own contracts.
 
 | Local call | Required provider implementation | Completed result |
 | --- | --- | --- |
@@ -74,11 +72,11 @@ Implement the cryptographic operations in Clef under Fidelity.Cryptography's exi
 | `ReleaseCiphertext` | Retire the owned Clef coefficient storage under its DMM/region contract | No borrowed reference or deferred native work survives |
 | `ReleaseEvaluator`, `ReleaseClient` | Release bundle members in dependency order and satisfy the applicable sensitive-state cleanup contract | Completion with no remaining owned resource |
 
-A successful `Result` must denote a completed operation and an established carrier, not a deferred computation that still needs a soon-to-be-retired coefficient array. Failed operations clean up partial allocations. Release functions are total and do not throw. Use explicit Clef result paths, with partial region ownership accounted for on failure. This contract is deliberately synchronous, so cancellation and background callbacks do not complicate the first greeting.
+A successful `Result` must contain a completed value whose prerequisites can be retired safely. Failed operations clean up partial allocations. Release functions are total and do not throw. Use explicit Clef result paths, with partial region ownership accounted for on failure. Calls complete synchronously before returning.
 
-Clef's shared deferred bindings make the last-use point significant. The code matches provider outcomes before releasing their prerequisites, and branches on `actual = expected` before releasing the answer or client. It returns a literal status after cleanup, never a deferred decoded value or a borrowed coefficient view. These sequencing and lifetime claims must be checked against the accepted native artifact; source order alone is not an erasure proof.
+Because Clef bindings are shared deferred computations, the code matches provider outcomes before releasing their prerequisites, and branches on `actual = expected` before releasing the answer or client. It returns a literal status after cleanup, never a deferred decoded value or a borrowed coefficient view. These sequencing and lifetime claims must be checked against the accepted native artifact; source order alone is not an erasure proof.
 
-At the add boundary the live ciphertext set is bounded: original input, square temporary and fresh answer, plus provider scratch. The square retires immediately after add completion; the answer and input retire after the client comparison. No object waits for an actor reply or an eventual collector cycle. Key, plaintext, spill and temporary-copy erasure remain the stronger provider/lowering obligation.
+At the add boundary the live ciphertext set is bounded: original input, square temporary and fresh answer, plus provider scratch. The square retires immediately after add completion; the answer and input retire after the client comparison. Erasure of keys, plaintext, spills and temporary copies requires additional provider and lowering evidence.
 
 ## First native acceptance
 
@@ -92,6 +90,6 @@ At the add boundary the live ciphertext set is bounded: original input, square t
 | Lowered sequencing | Native evidence shows comparison/decode completed before their prerequisites are released; no secret view escapes |
 | Clef proof path | Inspect the PSG participants, generated obligations, MLIR/SMT correspondence and checked lowering evidence for the actual Clef kernels |
 
-The expected human-facing greeting after the `6` run is `HelloFHE: encrypted evaluation returned 42`. Print it only after status `0`. This is proposed output, not a captured run. Fresh ciphertext differences or unreadable packet bytes can be useful observations later; they are not the confidentiality argument.
+The expected output for input `6` is `HelloFHE: encrypted evaluation returned 42`. Print it only after status `0`. This output has not been observed in an encrypted run. Ciphertext observations alone do not establish confidentiality.
 
-The implementation work is detailed in [02 — First-party Clef cryptography](02-first-party-cryptography.md). Its proof-instrumentation acceptance is defined in [03 — Tier 1–4 proof instrumentation](03-proof-instrumentation.md).
+The implementation work is detailed in [02: First-party Clef cryptography](02-first-party-cryptography.md). Its proof-instrumentation acceptance is defined in [03: Tier 1-4 proof instrumentation](03-proof-instrumentation.md).

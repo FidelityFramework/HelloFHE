@@ -4,7 +4,7 @@
 
 Optional service hosting, bounded admission, terminal outcomes and MBS persistence.
 
-Use the existing Olivier/Prospero/Ariel separation: Olivier's evaluator behavior, Prospero's bounded supervision and placement, Ariel's execution/transport machinery. Bind those contracts through the selected native substrate rather than defining a parallel actor system in HelloFHE.
+Olivier defines evaluator behavior, Prospero provides bounded supervision and placement, and Ariel handles execution and transport. Use their contracts with the selected native substrate.
 
 The service state contains a validated public context, required evaluation material, circuit/artifact identity, bounded admission accounting and worker availability. Client key state remains in the client process. Each active evaluator owns its arena; read-only public tables may be shared only under the backend's concurrency contract.
 
@@ -43,7 +43,7 @@ Before deserialization, reserve the admitted worst-case expanded job bytes, scra
 
 At-most-once local terminal selection does not imply exactly-once remote execution or reply delivery. Keep a bounded completion ledger until the admitted acknowledgment/retention boundary. Retrying after an ambiguous crash creates a fresh attempt identity; do not promise deduplication after ledger expiry. Late replies cannot consume a new attempt's authority.
 
-Immediate disposal follows the justified last use, including native callbacks and transport consumption. Active marshaling makes that ownership transfer explicit. Zero-copy is selected only when the accepted representation, aliasing and lifetime contracts permit it; one copy may buy better locality and a simpler retirement boundary.
+Immediate disposal follows the justified last use, including native callbacks and transport consumption. Active marshaling makes that ownership transfer explicit. Zero-copy is selected only when the accepted representation, aliasing and lifetime contracts permit it; a copy can improve locality and simplify retirement.
 
 ## Ciphertext persistence with MBS
 

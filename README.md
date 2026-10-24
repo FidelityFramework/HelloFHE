@@ -1,10 +1,8 @@
 # HelloFHE
 
-A small Clef program toward a fully homomorphic encryption greeting: give an evaluator an encrypted integer, calculate `x * x + x`, and decrypt the answer on the client. For input `6`, the answer is `42`.
+HelloFHE is a Clef project for evaluating `x * x + x` on encrypted integers. The client encrypts the input and decrypts the result. Input `6` produces `42`.
 
-The greeting is: **You gave me something I could not read. I computed with it. Here is an answer only you can open.**
-
-The cryptographic implementation belongs in first-party Clef within Fidelity.Cryptography. OpenFHE and published algorithms provide reference material. HelloFHE also exercises Tier 1–4 proof instrumentation in the PSG hypergraph and SMT lowering through MLIR; printing the expected answer alone is not its acceptance gate.
+The cryptographic implementation belongs in first-party Clef within Fidelity.Cryptography. OpenFHE and published algorithms provide reference material. HelloFHE also exercises Tier 1-4 proof instrumentation in the PSG hypergraph and SMT lowering through MLIR. Acceptance requires evidence for the computation and its lowering.
 
 ## Current state
 
@@ -22,7 +20,7 @@ The admitted clear input range is `0..100`, with results in `0..10100`. The firs
 
 ## Documentation
 
-[Start with the documentation index](docs/README.md). The numbered documents separate foundations, the demonstrator, cryptography, proofs, optimization, service lifecycle, acceptance and sources.
+[Start with the documentation index](docs/README.md). The numbered documents cover foundations, the demonstrator, cryptography, proofs, optimization, service lifecycle, acceptance and sources.
 
 ## Working with Composer
 

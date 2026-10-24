@@ -2,8 +2,6 @@
 
 [Documentation index](README.md)
 
-Layout, SIMD kernels, placement and the obligations for optimized Clef realizations.
-
 ## Joint settlement and compiler ownership
 
 Carry the following participants together in the PSG: source revision and admitted arithmetic branch; lane/slot map and padding; parameter and key requirements; coefficient/NTT form and level at each edge; buffer extents, alignment, aliases and last use; target instruction features, memory spaces and topology; kernel dependencies and completion events. A local change to one participant invalidates the dependent schedule and evidence.
@@ -22,15 +20,15 @@ flowchart TD
 
 Extend the owning CCS/Baker representation and scheduling work, the existing Alex admission mechanism and the selected backend leg. Do not add a semantic FHE dialect, an MLIR plugin or a middle-end pass that rediscovers packing and ownership. An uncertified optimization must re-dispatch affected obligations at the matching seam scope. An unsupported obligation remains unresolved and blocks the dependent commitment.
 
-Keep two Clef realizations of the same circuit plan. **The scalar realization** supplies the initial arithmetic and proof baseline. **The optimized realization** uses admitted modular arithmetic, NTT and scheduling laws so Baker can settle layout and schedule and the backend can realize target SIMD. Both remain visible Clef implementations under the same verification machinery. A relational result connects their semantics; native acceptance establishes the actual target artifact.
+Keep scalar and optimized Clef realizations of the same circuit plan. The scalar version supplies the arithmetic and proof baseline. The optimized version uses admitted modular arithmetic, NTT and scheduling laws so Baker can settle layout and schedule and the backend can realize target SIMD. Both remain visible Clef implementations under the same verification machinery. A relational result connects their semantics; native acceptance establishes the actual target artifact.
 
 ## Coefficient layout and working-set model
 
-Recommend a compute view indexed by `[ciphertext component][RNS limb][coefficient]`, with coefficients contiguous in each limb and fixed-width unsigned storage admitted by the kernel. This is a candidate Clef compute layout. Keep transport serialization and owned computation buffers distinct. Conversion between them has a checked map and measured cost; never reinterpret a serialized ciphertext as an arbitrary coefficient array.
+Recommend a compute view indexed by `[ciphertext component][RNS limb][coefficient]`, with coefficients contiguous in each limb and fixed-width unsigned storage admitted by the kernel. This layout is a candidate for Clef computation. Keep transport serialization and owned computation buffers distinct. Conversion between them has a checked map and measured cost; never reinterpret a serialized ciphertext as an arbitrary coefficient array.
 
-Let `N` be ring degree, `L` the active limb count, `c` the component count and `w` bytes per stored coefficient. The uncompressed coefficient payload is `c * L * N * w`. Headers, alignment, allocator metadata, auxiliary key-switch bases, twiddle tables and scratch are additional. Track the larger basis and component count during multiplication/key switching, rather than pricing only the final ciphertext.
+Let `N` be ring degree, `L` the active limb count, `c` the component count and `w` bytes per stored coefficient. The uncompressed coefficient payload is `c * L * N * w`. Headers, alignment, allocator metadata, auxiliary key-switch bases, twiddle tables and scratch are additional. Account for the larger basis and component count during multiplication/key switching as well as the final ciphertext.
 
-For illustration only, `N=8192`, `L=3`, `w=8` gives 384 KiB for a two-component ciphertext and 576 KiB for three components. A later relinearized realization preserving an input alongside a three-component product and a two-component result totals 1344 KiB before evaluation keys and scratch. The initial unrelinearized realization instead reserves its actual three-component answer. This is a layout calculation, not a selected modulus chain or a claim of L1 residency.
+For illustration only, `N=8192`, `L=3`, `w=8` gives 384 KiB for a two-component ciphertext and 576 KiB for three components. A later relinearized realization preserving an input alongside a three-component product and a two-component result totals 1344 KiB before evaluation keys and scratch. The initial unrelinearized realization instead reserves its actual three-component answer. These figures describe storage only. Modulus-chain selection and cache residency require separate evidence.
 
 For each candidate schedule, calculate peak live buffers plus the active key/table portion and transport staging. Use full allocation extents and touched cache lines, following the CPU design; useful coefficient bytes alone undercount traffic. Compare that model with target cache capacities, associativity assumptions and competing traffic. A capacity fit is an estimate, not a cache reservation.
 
@@ -67,4 +65,4 @@ A fixed circuit does not establish side-channel resilience of key generation, en
 
 Tier 2 supplies local range, width, alignment and resource premises. Tier 3 can supply registered kernel and service lemmas. Tier 4 relates realizations, traces or distributions, including computational RHL/pRHL confidentiality and leakage judgments under named assumptions. Security is one use of its broader relational remit. Profile counters support measured performance claims; they do not discharge a leakage theorem.
 
-The local [OpenFHE HEXL study](08-openfhe-study-and-attribution.md#hexl-extract-the-arithmetic-preconditions-and-optimization-question) pins the arithmetic and transform excerpts that inform this plan. Its lessons become contracts and original Clef kernels under the existing proof owners.
+The local [OpenFHE HEXL study](08-openfhe-study-and-attribution.md#hexl-modular-arithmetic-and-transforms) pins the arithmetic and transform excerpts that inform this plan. Its lessons become contracts and original Clef kernels under the existing proof owners.
