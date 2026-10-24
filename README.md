@@ -24,8 +24,6 @@ The admitted clear input range is `0..100`, with results in `0..10100`. The firs
 
 [Start with the documentation index](docs/README.md). The numbered documents separate foundations, the demonstrator, cryptography, proofs, optimization, service lifecycle, acceptance and sources.
 
-For the first implementation, read [01 — The synchronous demonstrator](docs/01-synchronous-demonstrator.md), [02 — First-party Clef cryptography](docs/02-first-party-cryptography.md) and [03 — Tier 1–4 proof instrumentation](docs/03-proof-instrumentation.md). [06 — Implementation and acceptance](docs/06-implementation-and-acceptance.md) owns the work sequence and exit gates. The local OpenFHE checkouts and their study roles are mapped in [08 — OpenFHE study and attribution](docs/08-openfhe-study-and-attribution.md).
-
 ## Working with Composer
 
 The manifest selects the sibling Linux x86_64 platform package at `../Fidelity.Platform/Profiles/Linux_x86_64_Default/Fidelity.Platform.fidproj`. Another deployment needs its corresponding admitted platform selection. Source order is arithmetic, protocol, experiment, entry point.
